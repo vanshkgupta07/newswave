@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewsWave | Global Insights</title>
+    {% load static %}
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap">
+    <link rel="stylesheet" href="{% static 'newsapp/css/style.css' %}?v=2">
+</head>
+<body data-theme="light">
+    
+    <div class="theme-toggle">🌙</div>
+    
+    <div class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>NewsWave</h1>
+            <p>Intelligence Redefined. Real-time global news at your fingertips.</p>
+        </header>
+
+        <section class="search-section">
+            <form action="{% url 'index' %}" method="get" class="search-form" id="searchForm">
+                <!-- Keyword -->
+                <div class="form-group">
+                    <label>Keyword</label>
+                    <input type="text" name="q" value="{{ query }}" placeholder="Search topics..." autocomplete="off">
+                </div>
+
+                <!-- Country Dropdown -->
+                <div class="form-group">
+                    <label>Country</label>
+                    <div class="custom-dropdown" id="countryDropdown">
+                        <input type="hidden" name="country" value="{{ country }}">
+                        <div class="dropdown-header">
+                            <span>
+                                {% if country == 'us' %}USA
+                                {% elif country == 'gb' %}UK
+                                {% elif country == 'in' %}India
+                                {% elif country == 'ca' %}Canada
+                                {% elif country == 'au' %}Australia
+                                {% else %}Global{% endif %}
+                            </span>
+                        </div>
+                        <div class="dropdown-list">
+                            <div class="dropdown-item {% if country == 'us' %}selected{% endif %}" data-value="us">USA</div>
+                            <div class="dropdown-item {% if country == 'gb' %}selected{% endif %}" data-value="gb">UK</div>
+                            <div class="dropdown-item {% if country == 'in' %}selected{% endif %}" data-value="in">India</div>
+                            <div class="dropdown-item {% if country == 'ca' %}selected{% endif %}" data-value="ca">Canada</div>
+                            <div class="dropdown-item {% if country == 'au' %}selected{% endif %}" data-value="au">Australia</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Source Dropdown -->
+                <div class="form-group">
+                    <label>Source</label>
+                    <div class="custom-dropdown" id="sourceDropdown">
+                        <input type="hidden" name="source" value="{{ source }}">
+                        <div class="dropdown-header">
+                            <span>{% if source %}{{ source }}{% else %}All Sources{% endif %}</span>
+                        </div>
+                        <div class="dropdown-list">
+                            <div class="dropdown-item" data-value="">All Sources</div>
+                            {% for src in sources %}
+                                <div class="dropdown-item {% if source == src.id %}selected{% endif %}" data-value="{{ src.id }}">{{ src.name }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sort Dropdown -->
+                <div class="form-group">
+                    <label>Sort By</label>
+                    <div class="custom-dropdown" id="sortDropdown">
+                        <input type="hidden" name="sort_by" value="{{ sort_by }}">
+                        <div class="dropdown-header">
+                            <span>
+                                {% if sort_by == 'publishedAt' %}Latest
+                                {% elif sort_by == 'popularity' %}Popularity
+                                {% else %}Relevance{% endif %}
+                            </span>
+                        </div>
+                        <div class="dropdown-list">
+                            <div class="dropdown-item {% if sort_by == 'relevancy' %}selected{% endif %}" data-value="relevancy">Relevance</div>
+                            <div class="dropdown-item {% if sort_by == 'publishedAt' %}selected{% endif %}" data-value="publishedAt">Latest</div>
+                            <div class="dropdown-item {% if sort_by == 'popularity' %}selected{% endif %}" data-value="popularity">Popularity</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mode Dropdown -->
+                <div class="form-group">
+                    <label>Mode</label>
+                    <div class="custom-dropdown" id="modeDropdown">
+                        <input type="hidden" name="type" value="{% if top_headlines %}top-headlines{% else %}everything{% endif %}">
+                        <div class="dropdown-header">
+                            <span>{% if top_headlines %}Top Headlines{% else %}General Search{% endif %}</span>
+                        </div>
+                        <div class="dropdown-list">
+                            <div class="dropdown-item {% if not top_headlines %}selected{% endif %}" data-value="everything">General Search</div>
+                            <div class="dropdown-item {% if top_headlines %}selected{% endif %}" data-value="top-headlines">Top Headlines</div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </button>
+            </form>
+        </section>
+
+        <div class="content-area">
+            {% if is_initial %}
+                <div class="welcome-state" style="text-align: center; padding: 6rem 2rem; background: var(--card-bg); border-radius: 24px; border: 1px solid var(--glass-border);">
+                    <div style="font-size: 4rem; margin-bottom: 1.5rem;">🌊</div>
+                    <h2 style="font-size: 2rem; margin-bottom: 1rem;">Welcome to NewsWave</h2>
+                    <p style="opacity: 0.7; max-width: 500px; margin: 0 auto;">Enter a keyword or select a source above to start exploring intelligence from over 80,000 global publications.</p>
+                </div>
+            {% elif error_message %}
+                <div class="error-message">
+                    <h3>Connection Error</h3>
+                    <p>{{ error_message }}</p>
+                </div>
+            {% else %}
+                <div class="news-grid">
+                    {% if articles %}
+                        {% for article in articles %}
+                            <article class="news-card">
+                                <div class="card-image">
+                                    {% if article.urlToImage %}
+                                        <img src="{{ article.urlToImage }}" alt="{{ article.title }}" loading="lazy">
+                                    {% else %}
+                                        <img src="https://images.unsplash.com/photo-1504711432869-53c035651372?q=80&w=1471&auto=format&fit=crop" alt="Placeholder">
+                                    {% endif %}
+                                </div>
+                                <div class="card-content">
+                                    <div class="card-meta">
+                                        <span class="source-name">{{ article.source.name }}</span>
+                                        <span class="pub-date">{{ article.formatted_date }}</span>
+                                    </div>
+                                    <h3 class="card-title">{{ article.title }}</h3>
+                                    <p class="card-description">{{ article.summary }}</p>
+                                    <a href="{{ article.url }}" target="_blank" class="card-link">
+                                        View Full Story 
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                                    </a>
+                                </div>
+                            </article>
+                        {% endfor %}
+                    {% else %}
+                        <div class="no-results">
+                            <h3>No matches found</h3>
+                            <p>We couldn't find any articles for your selection. Try a broader keyword.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script src="{% static 'newsapp/js/main.js' %}?v=2"></script>
+</body>
+</html>
