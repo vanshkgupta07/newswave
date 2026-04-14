@@ -97,4 +97,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # API Keys
-NEWSAPI_KEY = os.getenv("NEWSAPI_KEY")
+# NEWSAPI_KEY = os.getenv("NEWSAPI_KEY")
+
+NEWSDATA_API_KEY = os.getenv("NEWSDATA_API_KEY")
+
