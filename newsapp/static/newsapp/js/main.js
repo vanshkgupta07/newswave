@@ -1,27 +1,29 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // UI Elements
     const themeToggle = document.querySelector('.theme-toggle');
-    const body = document.body;
     const searchForm = document.getElementById('searchForm');
     const loadingOverlay = document.querySelector('.loading-overlay');
     const dropdowns = document.querySelectorAll('.custom-dropdown');
 
-    // Theme Management
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    body.setAttribute('data-theme', savedTheme);
+    // Theme toggle icon update (design stays dark-first)
+    function updateThemeIcon(theme) {
+        const isDark = theme === 'dark' || theme === null;
+        themeToggle.innerHTML = isDark
+            ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>`
+            : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+    }
+
+    // This design is dark by default; light mode is optional
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.body.setAttribute('data-theme', savedTheme);
     updateThemeIcon(savedTheme);
 
     themeToggle.addEventListener('click', () => {
-        const currentTheme = body.getAttribute('data-theme');
-        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-        body.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-        updateThemeIcon(newTheme);
+        const current = document.body.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.body.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+        updateThemeIcon(next);
     });
-
-    function updateThemeIcon(theme) {
-        themeToggle.innerHTML = theme === 'light' ? '🌙' : '☀️';
-    }
 
     // Custom Dropdown Logic
     dropdowns.forEach(dropdown => {
@@ -29,58 +31,60 @@ document.addEventListener('DOMContentLoaded', () => {
         const list = dropdown.querySelector('.dropdown-list');
         const hiddenInput = dropdown.querySelector('input[type="hidden"]');
         const items = dropdown.querySelectorAll('.dropdown-item');
-        const headerText = header.querySelector('span');
+        const headerSpan = header.querySelector('span');
 
         header.addEventListener('click', (e) => {
             e.stopPropagation();
-            // Close other dropdowns
             dropdowns.forEach(d => {
                 if (d !== dropdown) d.querySelector('.dropdown-list').style.display = 'none';
             });
-            const isOpen = list.style.display === 'block';
-            list.style.display = isOpen ? 'none' : 'block';
+            list.style.display = list.style.display === 'block' ? 'none' : 'block';
         });
 
         items.forEach(item => {
             item.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const value = item.getAttribute('data-value');
-                const text = item.textContent;
-
-                // Update UI
-                headerText.textContent = text;
-                hiddenInput.value = value;
-                
-                // Update selection state
+                headerSpan.textContent = item.textContent.trim();
+                hiddenInput.value = item.getAttribute('data-value');
                 items.forEach(i => i.classList.remove('selected'));
                 item.classList.add('selected');
-
-                // Close list
                 list.style.display = 'none';
             });
         });
     });
 
-    // Close dropdowns on outside click
     document.addEventListener('click', () => {
         dropdowns.forEach(d => {
             d.querySelector('.dropdown-list').style.display = 'none';
         });
     });
 
-    // Loading State
+    // Loading state
     if (searchForm) {
         searchForm.addEventListener('submit', () => {
             loadingOverlay.style.display = 'flex';
         });
     }
 
-    // Image Fallback Handling
-    const newsImages = document.querySelectorAll('.card-image img');
-    newsImages.forEach(img => {
-        img.onerror = function() {
+    // Image fallback
+    document.querySelectorAll('.card-image img').forEach(img => {
+        img.onerror = function () {
             this.src = 'https://images.unsplash.com/photo-1504711432869-53c035651372?q=80&w=1471&auto=format&fit=crop';
-            this.onerror = null; // Prevent infinite loop
+            this.onerror = null;
         };
+    });
+
+    // Staggered card entrance animation
+    const cards = document.querySelectorAll('.news-card');
+    cards.forEach((card, i) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(16px)';
+        card.style.transition = `opacity 0.4s ease ${i * 0.05}s, transform 0.4s ease ${i * 0.05}s, border-color 0.3s, box-shadow 0.3s`;
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, 60 + i * 50);
+        });
     });
 });
